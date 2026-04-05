@@ -20,6 +20,18 @@ export default function CreatePage() {
 
   const canGenerate = location && selfie && !generating;
 
+  const handleLocationSelect = (loc: {
+    lat: number;
+    lng: number;
+    name: string;
+    defaultHeading?: number;
+  }) => {
+    setLocation(loc);
+    if (loc.defaultHeading !== undefined) {
+      setHeading(loc.defaultHeading);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!location || !selfie) return;
 
@@ -41,6 +53,7 @@ export default function CreatePage() {
             width: 640,
             height: 480,
           },
+          locationName: location.name,
         }),
       });
 
@@ -61,7 +74,7 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <div className="mx-auto max-w-lg px-5 py-10">
+      <div className="mx-auto max-w-lg px-5 pb-52 pt-10">
         <Link
           href="/"
           className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -77,27 +90,21 @@ export default function CreatePage() {
         </p>
 
         <div className="mt-8 flex flex-col gap-8">
-          <section>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-              1. Choose Destination
-            </h2>
-            <MapSearch onSelect={setLocation} />
-            {location && (
-              <div className="mt-4">
-                <StreetViewPreview
-                  lat={location.lat}
-                  lng={location.lng}
-                  locationName={location.name}
-                  heading={heading}
-                  onHeadingChange={setHeading}
-                />
-              </div>
-            )}
-          </section>
+          {location && (
+            <section>
+              <StreetViewPreview
+                lat={location.lat}
+                lng={location.lng}
+                locationName={location.name}
+                heading={heading}
+                onHeadingChange={setHeading}
+              />
+            </section>
+          )}
 
           <section>
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-              2. Take a Selfie
+              {location ? "2." : "1."} Take a Selfie
             </h2>
             <SelfieCapture onCapture={setSelfie} />
           </section>
@@ -113,6 +120,11 @@ export default function CreatePage() {
           </section>
         </div>
       </div>
+
+      <MapSearch
+        selected={location?.name ?? null}
+        onSelect={handleLocationSelect}
+      />
     </div>
   );
 }

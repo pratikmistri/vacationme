@@ -21,6 +21,7 @@ export interface Slide {
 export interface GenerateRequest {
   streetView: StreetViewParams;
   selfie: SelfieData;
+  locationName?: string;
 }
 
 export interface GenerateResponse {

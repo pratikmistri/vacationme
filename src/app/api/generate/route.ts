@@ -3,6 +3,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { generateSlides } from "@/lib/composite";
 import type { GenerateRequest, GenerateResponse } from "@/lib/types";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
   const { ok } = rateLimit(ip);
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { streetView, selfie } = body;
+  const { streetView, selfie, locationName } = body;
 
   if (!streetView || typeof streetView.lat !== "number" || typeof streetView.lng !== "number") {
     return NextResponse.json({ error: "Street view params required" }, { status: 400 });
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest) {
       streetView.lng,
       streetView.heading ?? 0,
       selfie.dataUrl,
+      locationName,
     );
 
     const response: GenerateResponse = { slides };

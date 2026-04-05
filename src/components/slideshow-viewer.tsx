@@ -31,7 +31,7 @@ export function SlideshowViewer({
 
   if (slides.length === 0) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900">
+      <div className="mx-auto flex aspect-[9/16] w-full max-h-[80vh] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900">
         No slides to show
       </div>
     );
@@ -41,7 +41,7 @@ export function SlideshowViewer({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+      <div className="relative mx-auto aspect-[9/16] w-full max-h-[80vh] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
         <img
           src={slide.imageUrl}
           alt={slide.caption || `Slide ${current + 1}`}
