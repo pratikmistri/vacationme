@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { MapSearch } from "@/components/map-search";
 import { StreetViewPreview } from "@/components/street-view-preview";
 import { SelfieCapture } from "@/components/selfie-capture";
@@ -72,53 +71,96 @@ export default function CreatePage() {
     }
   };
 
+  // Step 1: Camera — shown when no selfie taken yet
+  if (!selfie) {
+    return (
+      <div className="flex min-h-screen flex-col bg-black">
+        <div className="flex items-center justify-between px-5 pt-6 pb-4">
+          <a
+            href="/"
+            className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+          >
+            Cancel
+          </a>
+          <h1 className="text-sm font-semibold text-white">
+            Take a Selfie
+          </h1>
+          <div className="w-12" />
+        </div>
+
+        <div className="flex flex-1 flex-col items-center justify-center px-5 pb-12">
+          <SelfieCapture onCapture={setSelfie} />
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Pick destination + panorama
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <div className="mx-auto max-w-lg px-5 pb-52 pt-10">
-        <Link
-          href="/"
-          className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-        >
-          ← Back
-        </Link>
+      <div className="mx-auto max-w-lg px-5 pb-52 pt-6">
+        {/* Header with selfie preview */}
+        <div className="flex items-center gap-4">
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-white shadow-md">
+            <img
+              src={selfie}
+              alt="Your selfie"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              Pick Your Destination
+            </h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Choose a place and look around in street view
+            </p>
+          </div>
+          <button
+            onClick={() => setSelfie(null)}
+            className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          >
+            Retake
+          </button>
+        </div>
 
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Create Your Reel
-        </h1>
-        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          Pick a destination and snap a selfie to generate your vacation reel.
-        </p>
+        {/* Panorama */}
+        {location && (
+          <div className="mt-6">
+            <StreetViewPreview
+              lat={location.lat}
+              lng={location.lng}
+              locationName={location.name}
+              heading={heading}
+              onHeadingChange={setHeading}
+            />
+          </div>
+        )}
 
-        <div className="mt-8 flex flex-col gap-8">
-          {location && (
-            <section>
-              <StreetViewPreview
-                lat={location.lat}
-                lng={location.lng}
-                locationName={location.name}
-                heading={heading}
-                onHeadingChange={setHeading}
-              />
-            </section>
-          )}
+        {/* Prompt to pick destination */}
+        {!location && (
+          <div className="mt-8 flex flex-col items-center justify-center py-20 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <span className="text-2xl">🌍</span>
+            </div>
+            <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+              Pick a destination below to preview the street view
+            </p>
+          </div>
+        )}
 
-          <section>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-              {location ? "2." : "1."} Take a Selfie
-            </h2>
-            <SelfieCapture onCapture={setSelfie} />
-          </section>
-
-          <section>
+        {/* Generate button */}
+        {location && (
+          <div className="mt-6">
             <button
               onClick={handleGenerate}
               disabled={!canGenerate}
-              className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-all hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="w-full rounded-xl bg-zinc-900 py-3.5 text-sm font-semibold text-white transition-all hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {generating ? "Generating..." : "Generate Vacation Reel"}
             </button>
-          </section>
-        </div>
+          </div>
+        )}
       </div>
 
       <MapSearch

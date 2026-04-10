@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 
 interface SelfieCaptureProps {
   onCapture: (dataUrl: string) => void;
@@ -10,9 +10,11 @@ export function SelfieCapture({ onCapture }: SelfieCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [streaming, setStreaming] = useState(false);
   const [captured, setCaptured] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
+      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: 640, height: 480 },
       });
@@ -21,9 +23,21 @@ export function SelfieCapture({ onCapture }: SelfieCaptureProps) {
         setStreaming(true);
       }
     } catch {
-      alert("Could not access camera. Please allow camera permissions.");
+      setError("Camera access denied. Please allow camera permissions and reload.");
     }
   }, []);
+
+  // Auto-start camera on mount
+  useEffect(() => {
+    startCamera();
+    return () => {
+      // Cleanup camera on unmount
+      if (videoRef.current) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream?.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, [startCamera]);
 
   const capture = useCallback(() => {
     const video = videoRef.current;
@@ -40,7 +54,6 @@ export function SelfieCapture({ onCapture }: SelfieCaptureProps) {
     setCaptured(dataUrl);
     onCapture(dataUrl);
 
-    // Stop camera
     const stream = video.srcObject as MediaStream;
     stream?.getTracks().forEach((t) => t.stop());
     setStreaming(false);
@@ -53,51 +66,62 @@ export function SelfieCapture({ onCapture }: SelfieCaptureProps) {
 
   if (captured) {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative w-48 h-48 overflow-hidden rounded-full border-4 border-white shadow-xl">
           <img
             src={captured}
             alt="Your selfie"
             className="h-full w-full object-cover"
           />
         </div>
-        <button
-          onClick={retake}
-          className="self-start rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Retake
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={retake}
+            className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Retake
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+    <div className="flex flex-col items-center">
+      <div className="relative w-full aspect-[3/4] max-h-[60vh] overflow-hidden rounded-3xl bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className={`h-full w-full object-cover ${streaming ? "" : "hidden"}`}
+          className={`h-full w-full object-cover scale-x-[-1] ${streaming ? "" : "hidden"}`}
         />
-        {!streaming && (
+        {!streaming && !error && (
           <div className="flex h-full w-full items-center justify-center">
-            <button
-              onClick={startCamera}
-              className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              Open Camera
-            </button>
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
+          </div>
+        )}
+        {error && (
+          <div className="flex h-full w-full items-center justify-center px-8">
+            <div className="text-center">
+              <p className="text-sm text-zinc-400">{error}</p>
+              <button
+                onClick={startCamera}
+                className="mt-4 rounded-full bg-white px-5 py-2 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         )}
       </div>
       {streaming && (
         <button
           onClick={capture}
-          className="self-center rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="mt-6 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white/20 shadow-lg backdrop-blur-sm transition-transform active:scale-90"
+          aria-label="Take selfie"
         >
-          Take Selfie
+          <div className="h-12 w-12 rounded-full bg-white" />
         </button>
       )}
     </div>
